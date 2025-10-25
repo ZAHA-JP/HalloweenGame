@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ハロウィン宝箱ゲーム🎃</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(#331a00, #ff8800);
+  height: 100vh;
+  margin: 0;
+  text-align: center;
+  overflow: hidden;
+  touch-action: manipulation;
+}
+#chestBtn {
+  position: absolute;
+  padding: 25px;
+  font-size: 64px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  transition: transform 0.1s ease;
+  user-select: none;
+}
+.bubble {
+  position: absolute;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 3px black;
+  animation: bubbleMove 0.8s forwards;
+}
+@keyframes bubbleMove {
+  0% {opacity:1; transform:translateY(0) scale(1);}
+  100% {opacity:0; transform:translateY(-80px) scale(2);}
+}
+.particle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: yellow;
+  border-radius: 50%;
+  pointer-events: none;
+}
+#win {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 36px;
+  font-weight: bold;
+  color: lime;
+  display: none;
+}
+</style>
+</head>
+<body>
+
+<button id="chestBtn">🎁</button>
+<div id="win">🎉 宝箱破裂！スタバゲット！ 🥳</div>
+
+<audio id="popSound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
+<audio id="boomSound" src="https://www.soundjay.com/explosion/sounds/explosion-02.mp3"></audio>
+
+<script>
+const btn = document.getElementById('chestBtn');
+const win = document.getElementById('win');
+const popSound = document.getElementById('popSound');
+const boomSound = document.getElementById('boomSound');
+
+let scale = 1;
+let clickCount = 0;
+const maxClicks = 8;
+const funnyTexts = ["うわっ！","ぎゃーーっ！","ぷしゅっ！","わはは！","ドカーン！"];
+
+function createBubble(x,y){
+  const b = document.createElement('div');
+  b.className = 'bubble';
+  b.textContent = funnyTexts[Math.floor(Math.random()*funnyTexts.length)];
+  b.style.left = x + 'px';
+  b.style.top = y + 'px';
+  document.body.appendChild(b);
+  setTimeout(() => b.remove(), 800);
+}
+
+function moveButtonRandom(){
+  const maxX = window.innerWidth - btn.offsetWidth;
+  const maxY = window.innerHeight - btn.offsetHeight;
+  const x = Math.random() * maxX;
+  const y = Math.random() * maxY;
+  btn.style.left = x + 'px';
+  btn.style.top = y + 'px';
+}
+
+function createParticles(x, y, count){
+  for(let i=0; i<count; i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = x + 'px';
+    p.style.top = y + 'px';
+    document.body.appendChild(p);
+    const angle = Math.random()*2*Math.PI;
+    const speed = Math.random()*6 + 2;
+    let vx = Math.cos(angle)*speed;
+    let vy = Math.sin(angle)*speed;
+    let alpha = 1;
+    const id = setInterval(()=>{
+      vy += 0.2; // gravity
+      x += vx;
+      y += vy;
+      alpha -= 0.05;
+      p.style.left = x + 'px';
+      p.style.top = y + 'px';
+      p.style.opacity = alpha;
+      if(alpha <= 0){
+        clearInterval(id);
+        p.remove();
+      }
+    }, 16);
+  }
+}
+
+function handleClick(){
+  clickCount++;
+  scale += 0.7; // 大きく膨らむ
+  btn.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  createBubble(btn.offsetLeft, btn.offsetTop);
+  moveButtonRandom();
+  popSound.currentTime = 0;
+  popSound.play();
+
+  if(clickCount >= maxClicks){
+    btn.remove();
+    boomSound.play();
+    createParticles(window.innerWidth/2, window.innerHeight/2, 50);
+    win.style.display = 'block';
+  }
+}
+
+// クリック・タッチ対応
+btn.addEventListener('click', handleClick);
+btn.addEventListener('touchstart', (e)=>{
+  e.preventDefault();
+  handleClick();
+}, {passive:false});
+</script>
+
+</body>
+</html>
